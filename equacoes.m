@@ -10,7 +10,7 @@ Ib = @(Ic, B) Ic/B;
 Ie = @(Ic, B) Ib(Ic, B) + Ic;
 %IC é arbitrario
 
-Rc = @(Vcc,Ic) (Vcc-Vc(Vcc))/Ic;
+Rc = @(Vcc,Ic) (Vcc-Vc(Vcc)-Ve(Vcc))/Ic;
 Re = @(Vcc, Ic, B) Ve(Vcc)/Ie(Ic, B); 
 R2 = @(Vcc, Ic, B) 0.1*B*Re(Vcc, Ic, B);
 R1 = @(Vcc, Ic, B) (R2(Vcc, Ic, B)*(Vcc - Vb(Vcc)))/B;
@@ -19,6 +19,8 @@ R1 = @(Vcc, Ic, B) (R2(Vcc, Ic, B)*(Vcc - Vb(Vcc)))/B;
 
 function polarizacao(Vcc, Ic, B, vc, ve, vb, ie, ib, rc, re, r1, r2)
 
+  printf("==== RESULTADOS ====\n");
+  printf("==== Vcc = %.2e | Ic = %.2e | betinha = %.2e ====\n", Vcc, Ic, B);
   printf("==== Tensões ====\n");
   printf("Vcc: %.2E\n", Vcc);
   printf("Vc: %.2E\n", vc);
