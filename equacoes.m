@@ -1,21 +1,24 @@
 
-divisor_tensao = @(r1, r2, vin) (vin*r1)/(r1+r2);
-r_paralelo = @(r1, r2) (r1*r2)/(r1+r2);
+global divisor_tensao = @(r1, r2, vin) (vin*r1)/(r1+r2);
+global r_paralelo = @(r1, r2) (r1*r2)/(r1+r2);
 
-Vc = @(Vcc) 0.5*Vcc;
-Ve = @(Vcc) 0.1*Vcc;
-Vb = @(Vcc) Ve(Vcc)+0.7;
+global Vc = @(Vcc) 0.5*Vcc;
+global Ve = @(Vcc) 0.1*Vcc;
+global Vb = @(Vcc) Ve(Vcc)+0.7;
 
-Ib = @(Ic, B) Ic/B;
-Ie = @(Ic, B) Ib(Ic, B) + Ic;
+global Ib = @(Ic, B) Ic/B;
+global Ie = @(Ic, B) Ib(Ic, B) + Ic;
 %IC é arbitrario
 
-Rc = @(Vcc,Ic) (Vcc-Vc(Vcc)-Ve(Vcc))/Ic;
-Re = @(Vcc, Ic, B) Ve(Vcc)/Ie(Ic, B); 
-R2 = @(Vcc, Ic, B) 0.1*B*Re(Vcc, Ic, B);
-R1 = @(Vcc, Ic, B) (R2(Vcc, Ic, B)*(Vcc - Vb(Vcc)))/B;
+global Rc = @(Vcc,Ic) (Vcc-Vc(Vcc)-Ve(Vcc))/Ic;
+global Re = @(Vcc, Ic, B) Ve(Vcc)/Ie(Ic, B); 
+global R2 = @(Vcc, Ic, B) 0.1*B*Re(Vcc, Ic, B);
+global R1 = @(Vcc, Ic, B) ((R2(Vcc, Ic, B) * Vcc)/Vb(Vcc))-R2(Vcc, Ic, B);
 
 
+global re   = @(Ic, Vt) Vt/Ic;
+global Zin  = @(Vcc, Ic, B, Vt) r_paralelo(r_paralelo(R1(Vcc, Ic, B), R2(Vcc, Ic, B)), re(Ic, Vt)*B);
+global Gain = @(Vcc, Ic, B) - (R1(Vcc, Ic, B)/R2(Vcc, Ic, B));
 
 function polarizacao(Vcc, Ic, B, vc, ve, vb, ie, ib, rc, re, r1, r2)
 
