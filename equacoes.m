@@ -19,12 +19,10 @@
 % Para resolver utilizamos: R2 <= 0.1*Bcc*Re
 % Bcc é o menor valor possível do BJT
 
-global paralelo = @(r1, r2) (r1*r2)/(r1+r2);
-global Xc = @(C, f) 1/(2*pi*f*C);
-global capacitor_corte = @(fc, r) 1/(2*pi*fc*r);
 
 % Polarização do BJT, aproximando Ie = Ic;
-function [R1, R2, Rc, Re] = analiseDC(Vcc, Ic, Hfe, Bcc)
+function [R1, R2, Rc, Re] = analiseDC(Vcc, Ic, Hfe)
+  Bcc = 110 % menor valor do beta do BJT
   % Tensões ao redor do BJT
   Vc = 0.5*Vcc;
   Ve = 0.1*Vcc;
@@ -52,19 +50,30 @@ end
 % E analise das impedâncias e ganho
 % Zin e Zout são funções
 function [C1, C2, C3, Zin, Zout] = analiseAC(Vcc, Ic, Hfe, Vt, Fc_low, Fc_high, R1, R2, Re, Rc, Rl)
+  paralelo = @(r1, r2) (r1*r2)/(r1+r2);
+  Xc = @(C, f) 1/(2*pi*f*C);
+  capacitor_corte = @(fc, r) 1/(2*pi*fc*r);
   % C1 é o passa faixa na entrada do BJT
   re = Vt/Ic;
-  req = paralelo(paralelo(R1, R2), Hfe*(Re+re)); % paraleo das resistencias da entrada
+  req = paralelo(paralelo(R1, R2), Hfe*(Re+re)) % paraleo das resistencias da entrada
   C1 = capacitor_corte(Fc_low, req);
   C2 = capacitor_corte(Fc_high, Rc); % apenas o Rc participa da conta para o passa baixa na saida
   C3 = capacitor_corte(0.1*Fc_low, Rl); % Capacitor de acoplamento, forma um passa baixa com o Rl
 
-  Zin  = @(f) Xc(C1, f) + req;
+  printf("Xc(20)    = %d\n", Xc(C1, 20));
+  printf("Xc(20000) = %d\n", Xc(C1, 20000));
+  Zin  = @(f) (Xc(C1, f) + req);
   Zout = @(f) paralelo(Xc(C2, f), Rc);
-  A    = @(f) -(Zout(f)/Re);
+  A    = @(f) -(Zout(f)/);
 
-  fq = 20:20000;
-  plot(fq, Zin, fq, Zout, fq, A);
+  fq   = [20 20000];
+  figure
+  grid on
+  % fplot(Zin, fq, "b--");
+  hold on
+  % fplot(Zout, fq, "r--");
+  hold on
+  % fplot(A, fq, "bk--");
   legend("Zin", "Zout", "ganho")
 end
 
@@ -72,12 +81,14 @@ end
 
 
 
-Ic       = input("Insira a corrente (em A):\n> ");
-B        = input("Insira o betinha:\n> ");
-Vcc      = input("Insira a tensão (em V):\n> ");
-Vt       = input("Insira Vt (em V):\n> ")
-Fc_low   = input("Insira a menor frequência (em Hz):\n> ")
-Fc_high  = input("Insira a maior frequência (em Hz):\n> ")
-printf("==== Vcc = %.2e | Ic = %.2e | Hfe = %.2e ====\n", Vcc, Ic, B);
+Ic       = 0.002;
+B        = 260;
+Vcc      = 10;
+Vt       = 0.026;
+Fc_low   = 500;
+Fc_high  = 6000;
+Rl       = 100000;
+printf("==== Vcc = %.2f V | Ic = %.2f mA | Hfe = %d ====\n", Vcc, Ic*1e3, B);
+printf("===  Vt = %.2f mV |  FL = %d Hz  | FH = %d Hz ==\n", Vt*1e3, Fc_low, Fc_high);
 [R1, R2, Rc, Re] = analiseDC(Vcc, Ic, B)
 [C1, C2, C3, Zin, Zout] = analiseAC(Vcc, Ic, B, Vt, Fc_low, Fc_high, R1, R2, Re, Rc, Rl)
